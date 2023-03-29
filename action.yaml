@@ -39,7 +39,6 @@ runs:
         retry_on: error
         shell: bash
         command: |
-          echo ${{ inputs.image_url }} 
           cd ${{ inputs.k8s_repo }}
           git config --local user.email ${{ inputs.git_user_email }}
           git config --local user.name ${{ inputs.git_user_name }}
