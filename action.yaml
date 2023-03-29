@@ -1,4 +1,4 @@
-name: update k8s
+name: update_k8s
 description: update image url of k8s manifest
 inputs:
   git_user_name:
@@ -43,7 +43,7 @@ runs:
           git config --local user.email ${{ inputs.git_user_email }}
           git config --local user.name ${{ inputs.git_user_name }}
           git config pull.rebase false
-          yq '(select(.kind == "Deployment" and .metadata.name == "${{ inputs.k8s_metadata_name }}") | .spec.template.spec.containers[] | select(.name == "${{ inputs.k8s_container_name }}") | .image) |= "'${{ image_url }}'"' -i ${{ inputs.k8s_filepath }} 
+          yq '(select(.kind == "Deployment" and .metadata.name == "${{ inputs.k8s_metadata_name }}") | .spec.template.spec.containers[] | select(.name == "${{ inputs.k8s_container_name }}") | .image) |= "'${{ inputs.image_url }}'"' -i ${{ inputs.k8s_filepath }} 
           git pull
           git add ${{ inputs.k8s_filepath }}
           git commit -m "[UpdateImageTag] ${{ inputs.k8s_filepath }} ${{ inputs.k8s_container_name }} ${{ inputs.target_image_tag }}"
