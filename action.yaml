@@ -1,0 +1,50 @@
+name: update k8s
+description: update image url of k8s manifest
+inputs:
+  git_user_name:
+    require: true
+  git_user_email: 
+    require: true
+  git_personal_access_token:
+    require: true
+  k8s_repo:
+    require: true
+  k8s_repo_ref:
+    require: true
+  k8s_filepath:
+    require: true
+  k8s_metadata_name:
+    require: true
+  k8s_container_name:
+    require: true
+  image_url:
+    require: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout task definition repository
+      uses: actions/checkout@v3
+      with:
+        repository: ${{ github.repository_owner }}/${{ inputs.k8s_repo }}
+        ref: ${{ inputs.k8s_repo_ref }}
+        token: ${{ inputs.git_personal_access_token }}
+        path: ${{ inputs.k8s_repo }}
+
+    - name: Update kubernetes manifest
+      uses: nick-fields/retry@v2
+      with:
+        max_attempts: 3
+        timeout_seconds: 15
+        retry_on: error
+        shell: bash
+        command: |
+          cd ${{ inputs.k8s_repo }}
+          git config --local user.email ${{ inputs.git_user_email }}
+          git config --local user.name ${{ inputs.git_user_name }}
+          git config pull.rebase false
+          yq '(select(.kind == "Deployment" and .metadata.name == "${{ inputs.k8s_metadata_name }}") | .spec.template.spec.containers[] | select(.name == "${{ inputs.k8s_container_name }}") | .image) |= "'${{ image_url }}'"' -i ${{ inputs.k8s_filepath }} 
+          git pull
+          git add ${{ inputs.k8s_filepath }}
+          git commit -m "[UpdateImageTag] ${{ inputs.k8s_filepath }} ${{ inputs.k8s_container_name }} ${{ inputs.target_image_tag }}"
+          git push
